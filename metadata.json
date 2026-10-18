@@ -1,0 +1,6 @@
+{
+  "name": "AI Small Business Assistant for Side Hustlers",
+  "description": "A comprehensive retail management and AI-powered business analytics app for shop owners and side hustlers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

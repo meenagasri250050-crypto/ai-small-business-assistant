@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Shop owner profile, shop details, and configuration",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "shopName": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 200 },
+        "address": { "type": "string", "maxLength": 300 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "currency": { "type": "string", "maxLength": 10 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["uid", "name", "shopName", "email", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product in inventory with cost, price, and stock counts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "sku": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 100 },
+        "purchaseCost": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "currentStock": { "type": "number" },
+        "lowStockThreshold": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "name", "sku", "category", "purchaseCost", "sellingPrice", "currentStock"]
+    },
+    "StockPurchase": {
+      "title": "StockPurchase",
+      "description": "Stock purchase and restocking log entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "productName": { "type": "string", "maxLength": 150 },
+        "quantity": { "type": "number" },
+        "purchaseCostPerUnit": { "type": "number" },
+        "totalCost": { "type": "number" },
+        "date": { "type": "string", "maxLength": 64 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "productId", "productName", "quantity", "purchaseCostPerUnit", "totalCost", "date"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Completed multi-item retail sales invoice and customer receipt",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "invoiceNumber": { "type": "string", "maxLength": 50 },
+        "customerName": { "type": "string", "maxLength": 150 },
+        "customerPhone": { "type": "string", "maxLength": 50 },
+        "items": { "type": "array" },
+        "totalUnits": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "totalCOGS": { "type": "number" },
+        "grossProfit": { "type": "number" },
+        "status": { "type": "string", "enum": ["completed", "cancelled", "refunded"] },
+        "paymentMethod": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "invoiceNumber", "items", "totalUnits", "subtotal", "totalAmount", "status", "date"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Operating business expenses such as rent, utilities, transport",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "category": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 64 },
+        "description": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "title", "category", "amount", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and shop settings"
+    },
+    "/users/{userId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Inventory product catalog"
+    },
+    "/users/{userId}/stock_purchases/{purchaseId}": {
+      "schema": "StockPurchase",
+      "description": "Stock purchase restock logs"
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Sales invoices"
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Business expenses"
+    }
+  }
+}

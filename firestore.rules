@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.uid == userId &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+        data.shopName is string && data.shopName.size() > 0 && data.shopName.size() <= 150 &&
+        data.email is string && data.email.size() > 0 && data.email.size() <= 200;
+    }
+
+    function isValidProduct(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+        data.sku is string && data.sku.size() > 0 && data.sku.size() <= 100 &&
+        data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+        data.purchaseCost is number && data.purchaseCost >= 0 &&
+        data.sellingPrice is number && data.sellingPrice >= 0 &&
+        data.currentStock is number && data.currentStock >= 0;
+    }
+
+    function isValidStockPurchase(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+        data.productId is string && data.productId.size() > 0 && data.productId.size() <= 128 &&
+        data.quantity is number && data.quantity > 0 &&
+        data.purchaseCostPerUnit is number && data.purchaseCostPerUnit >= 0 &&
+        data.totalCost is number && data.totalCost >= 0;
+    }
+
+    function isValidInvoice(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+        data.invoiceNumber is string && data.invoiceNumber.size() > 0 && data.invoiceNumber.size() <= 50 &&
+        data.items is list && data.items.size() > 0 && data.items.size() <= 100 &&
+        data.totalUnits is number && data.totalUnits > 0 &&
+        data.totalAmount is number && data.totalAmount >= 0 &&
+        data.status in ['completed', 'cancelled', 'refunded'];
+    }
+
+    function isValidExpense(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+        data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+        data.amount is number && data.amount > 0;
+    }
+
+    // User profile matching
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data, userId) && request.resource.data.uid == userId;
+      allow delete: if false;
+
+      // Products subcollection
+      match /products/{productId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(productId) && isValidProduct(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(productId) && isValidProduct(request.resource.data, userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(productId);
+      }
+
+      // Stock purchases log
+      match /stock_purchases/{purchaseId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(purchaseId) && isValidStockPurchase(request.resource.data, userId);
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // Invoices subcollection
+      match /invoices/{invoiceId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(invoiceId) && isValidInvoice(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(invoiceId) && isValidInvoice(request.resource.data, userId) && request.resource.data.userId == userId;
+        allow delete: if false;
+      }
+
+      // Expenses subcollection
+      match /expenses/{expenseId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(expenseId) && isValidExpense(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(expenseId) && isValidExpense(request.resource.data, userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(expenseId);
+      }
+    }
+
+    // Test connection document for connection healthcheck
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
